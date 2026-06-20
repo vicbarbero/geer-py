@@ -196,11 +196,15 @@ def create_pdf(data, output_filename, title_text="Estadísticas de Evaluación")
     # Tabla Materias
     table_data = [["Materia", "Alum.\nCalif.", "Calif.\nMedia", "Superan\n(Nº)", "Superan\n(%)", "No Sup.\n(Nº)", "No Sup.\n(%)", "Otros"]]
     suma_porcentaje_superan = 0
+    suma_superan = 0
+    suma_calific = 0
     
     for m in data['materias']:
         if m['count'] > 0:
             media = m['sum'] / m['count']
             pct_superan = (m['passed'] * 100) / m['count']
+            suma_superan += m['passed']
+            suma_calific += m['count']
             suma_porcentaje_superan += pct_superan
             pct_no_superan = 100 - pct_superan
             row = [get_subject_name(m['abbr']), m['count'], f"{media:.2f}", m['passed'], f"{round(pct_superan)}%", (m['count'] - m['passed']), f"{round(pct_no_superan)}%", m['others']]
@@ -244,9 +248,10 @@ def create_pdf(data, output_filename, title_text="Estadísticas de Evaluación")
     elements.append(Spacer(1, 10))
     
     media_suspensos = data['suma_suspensos_total'] / tot if tot > 0 else 0
-    media_pct_superan = suma_porcentaje_superan / len(data['materias']) if len(data['materias']) > 0 else 0
+    #media_pct_superan = suma_porcentaje_superan / len(data['materias']) if len(data['materias']) > 0 else 0
+    media_pct_superan = ((suma_superan*100) / suma_calific) if (suma_calific) > 0 else 0
     elements.append(Paragraph(f"Media de suspensos por alumno/a: {media_suspensos:.2f}", normal_style))
-    elements.append(Paragraph(f"Media de % de alumnado que supera materias: {media_pct_superan:.2f}%", normal_style))
+    elements.append(Paragraph(f"% de calificaciones superadas: {media_pct_superan:.2f}%", normal_style))
     elements.append(Spacer(1, 20))
     
     # Ranking
@@ -306,7 +311,7 @@ def create_pdf(data, output_filename, title_text="Estadísticas de Evaluación")
 
     # --- PIE DE PÁGINA REQUERIDO ---
     elements.append(Spacer(1, 30))
-    elements.append(Paragraph("Generado con GEEr v2.0.2", footer_style))
+    elements.append(Paragraph("Generado con GEEr v2.0.3", footer_style))
 
     doc.build(elements)
     print(f"OK: {output_filename}")
